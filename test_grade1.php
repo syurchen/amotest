@@ -193,5 +193,18 @@ case 'add_task':
 		}
 	}
 	die(print_r($amo->create_task($entity_id, $type, 1, $text, (int) $date, $user_id), TRUE));
+case 'end_task':
+	if (!isset($argv[2])){
+		die("Pass ID of task!!\n");
+	}
+	$task_id = $argv[2];
 
+	$amo = new AmoAPI(AMO_AUTH_LOGIN, AMO_AUTH_HASH, AMO_SUBDOMAIN, AMO_COOKIE_FILE, AMO_DEBUG);
+	if (!$amo->auth()){
+		die("Can't auth!!\n");
+	}
+	if(!$amo->get_task_by_id($task_id)){
+		die("Not a valid task id!!\n");
+	}
+	die(print_r($amo->close_task($task_id), TRUE));
 }

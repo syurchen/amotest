@@ -316,6 +316,19 @@ class AmoAPI {
 		return $this->query(self::TASKS_URL, TRUE, $data); 
 	}
 
+	public function close_task(int $id){
+		$data = array(
+			'update' => array(
+				array(
+					'id' => $id,
+					'updated_at' => time(),
+					'is_completed' => TRUE
+				)
+			)
+		);
+		return $this->query(self::TASKS_URL, TRUE, $data); 
+	}
+
 	public function get_contact_by_id(int $id){
 		$data = array(
 			'id' => $id
@@ -338,6 +351,14 @@ class AmoAPI {
 		);
 
 		return $this->query(self::COMPANIES_URL, FALSE, $data); 
+	}
+
+	public function get_task_by_id(int $id){
+		$data = array(
+			'id' => $id
+		);
+
+		return $this->query(self::TASKS_URL, FALSE, $data); 
 	}
 
 }
