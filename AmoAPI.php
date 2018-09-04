@@ -13,6 +13,8 @@ class AmoAPI {
 	const LEADS_URL = self::API_VERSION . 'leads';
 	const CONTACTS_URL = self::API_VERSION . 'contacts';
 	const COMPANIES_URL = self::API_VERSION . 'companies';
+	const NOTES_URL = self::API_VERSION . 'notes';
+	const TASKS_URL = self::API_VERSION . 'tasks';
 
 	private $user_login;
 	private $user_hash;
@@ -84,7 +86,8 @@ class AmoAPI {
 
 		if ($this->debug){
 			$this->log(time() . " {$link} {$code}");
-			$this->log(print_r(json_decode($out, true), true));
+			$this->log("data: " . print_r($data, true));
+			$this->log("response: " . print_r(json_decode($out, true), true));
 		}
 
 		if ($code == 429){
@@ -185,14 +188,14 @@ class AmoAPI {
 		return $this->query(self::FIELDS_URL, TRUE, $data); 
 	}
 
-	public function check_field_exists(string $name, int $id = 0){
+	public function check_field_exists(string $name, int $id = 0, int $entity_type = 0){
 		if ($this->get_custom_fields()){
 			foreach ($this->custom_fields as $field_type){
 				foreach ($field_type as $field){
 					if ($id && isset($field[$id])){
 						return $field[$id];
 					}
-					if ($field['name'] == $name){
+					if ($field['name'] == $name && (!$entity_type)){
 						return $field;
 					}
 				}
@@ -218,6 +221,19 @@ class AmoAPI {
 		return $this->query(self::LEADS_URL, TRUE, $data); 
 	}
 
+	public function update_lead(int $id, array $custom_fields){
+		$data = array(
+			'update' => array(
+				array(
+					'id' => $id,
+					'updated_at' => time(),
+					'custom_fields' => $custom_fields 
+				)
+			)
+		);
+		return $this->query(self::LEADS_URL, TRUE, $data); 
+	}
+
 	public function create_company(string $name){
 		$data = array(
 			'add' => array(
@@ -228,6 +244,20 @@ class AmoAPI {
 		);
 		return $this->query(self::COMPANIES_URL, TRUE, $data); 
 	}
+
+	public function update_company(int $id, array $custom_fields){
+		$data = array(
+			'update' => array(
+				array(
+					'id' => $id,
+					'updated_at' => time(),
+					'custom_fields' => $custom_fields,
+				)
+			)
+		);
+		return $this->query(self::COMPANIES_URL, TRUE, $data); 
+	}
+
 
 	public function create_contact(string $name, array $leads = array(),
 		array $companies = array(), array $custom_fields = array()){
@@ -250,6 +280,40 @@ class AmoAPI {
 		}
 
 		return $this->query(self::CONTACTS_URL, TRUE, $data); 
+	}
+
+	public function create_note(int $element_id, int $element_type, int $type, string $text){
+
+		$data = array(
+			'add' => array(
+				array(
+					'element_id' => $element_id,
+					'element_type' => $element_type,
+					'note_type' => $type,
+					'text' => $text,
+				)
+			)
+		);
+
+		return $this->query(self::NOTES_URL, TRUE, $data); 
+	}
+
+	public function create_task(int $element_id, int $element_type, int $type, string $text, int $due, int $user_id){
+
+		$data = array(
+			'add' => array(
+				array(
+					'element_id' => $element_id,
+					'element_type' => $element_type,
+					'note_type' => $type,
+					'text' => $text,
+					'complete_till_at' => $due,
+					'responsible_user_id' => $user_id
+				)
+			)
+		);
+
+		return $this->query(self::TASKS_URL, TRUE, $data); 
 	}
 
 	public function get_contact_by_id(int $id){

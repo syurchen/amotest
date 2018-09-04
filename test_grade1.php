@@ -1,8 +1,8 @@
 <?php
 
+include 'AmoEnums.php';
 include 'AmoAPI.php';
 include 'conf.php';
-include 'AmoEnums.php';
 
 if (!isset($argv[1])){
 	die("need method!\n");
@@ -75,21 +75,123 @@ case 'set_text_field':
 	$type = AmoEnums::entity_field_types['contact'];
 	if (!$entity){
 		$entity = $amo->get_lead_by_id($entity_id);
+		$type = AmoEnums::entity_field_types['lead'];
 		if (!$entity){
 			$entity = $amo->get_company_by_id($entity_id);
+			$type = AmoEnums::entity_field_types['company'];
 			if (!$entity){
 				die("Can't find an entity!!\n");
 			}
 		}
 	}
-	foreach ($entity[0]['custom_fields'] as $custom_field){
-		if ($custom_field['name'] == AMO_TEXT_FIELD_NAME){
-			$pass = TRUE;
+	$field = $amo->check_field_exists(AMO_TEXT_FIELD_NAME);
+	if (!$field){
+		$field = $amo->create_custom_field(AMO_TEXT_FIELD_NAME, AmoEnums::custom_field_types['TEXT'], 
+			$type, AMO_FIELD_ORIGIN);
+	}
+	if (isset($field[0])){
+		$field = $field[0];
+	}
+	$custom_fields = array(
+		array( 'id' => $field['id'],
+			'values' => array(
+				'value' => $value
+			)
+		)
+	);
+
+	switch ($type){
+		case AmoEnums::entity_field_types['contact']:
+			die(print_r($amo->update_contact($entity[0]['id'], $custom_fields), TRUE));
 			break;
+		case AmoEnums::entity_field_types['company']:
+			die(print_r($amo->update_company($entity[0]['id'], $custom_fields), TRUE));
+			break;
+		case AmoEnums::entity_field_types['lead']:
+			die(print_r($amo->update_lead($entity[0]['id'], $custom_fields), TRUE));
+			break;
+	}
+	break;
+case 'add_note':
+	if (!isset($argv[2])){
+		die("Pass ID of entity!!\n");
+	}
+	if (!isset($argv[3])){
+		die("Pass value of field!!\n");
+	}
+	if (!in_array($argv[3], array_keys(AmoEnums::note_types))){
+		die("Pass correct type like: " . implode(', ', array_keys(AmoEnums::note_types)) . "!!\n");
+	}
+
+	$entity_id = $argv[2];
+	$note_type = AmoEnums::note_types[$argv[3]];
+	$amo = new AmoAPI(AMO_AUTH_LOGIN, AMO_AUTH_HASH, AMO_SUBDOMAIN, AMO_COOKIE_FILE, AMO_DEBUG);
+	if (!$amo->auth()){
+		die("Can't auth!!\n");
+	}
+
+	$entity = $amo->get_contact_by_id($entity_id);
+	$type = AmoEnums::entity_field_types['contact'];
+	if (!$entity){
+		$entity = $amo->get_lead_by_id($entity_id);
+		$type = AmoEnums::entity_field_types['lead'];
+		if (!$entity){
+			$entity = $amo->get_company_by_id($entity_id);
+			$type = AmoEnums::entity_field_types['company'];
+			if (!$entity){
+				die("Can't find an entity!!\n");
+			}
 		}
 	}
-	if (!isset($pass)){
-
+	die(print_r($amo->create_note($entity_id, $type, $note_type, rand(0, 100)), TRUE));
+	break;
+case 'add_task':
+	if (!isset($argv[2])){
+		die("Pass ID of entity!!\n");
 	}
+	if (!isset($argv[3])){
+		die("Pass due date!!\n");
+	}
+	if (!isset($argv[4])){
+		die("Pass text of task!!\n");
+	}
+	if (!isset($argv[5])){
+		die("Pass user_id!!\n");
+	}
+
+	$entity_id = $argv[2];
+	$date = strtotime($argv[3]);
+	if (!$date){
+		die("Pass a valid date like '10 September 2000'!!\n");
+	}
+	
+
+	$text = $argv[4];
+	$user_id = $argv[5];
+
+	$amo = new AmoAPI(AMO_AUTH_LOGIN, AMO_AUTH_HASH, AMO_SUBDOMAIN, AMO_COOKIE_FILE, AMO_DEBUG);
+	if (!$amo->auth()){
+		die("Can't auth!!\n");
+	}
+
+	$users = $amo->get_users();
+	if (!isset($users[$user_id])){
+		die("Pass a existing user ID like " . implode(', ', array_keys($users)) . "!!\n");
+	}
+
+	$entity = $amo->get_contact_by_id($entity_id);
+	$type = AmoEnums::entity_field_types['contact'];
+	if (!$entity){
+		$entity = $amo->get_lead_by_id($entity_id);
+		$type = AmoEnums::entity_field_types['lead'];
+		if (!$entity){
+			$entity = $amo->get_company_by_id($entity_id);
+			$type = AmoEnums::entity_field_types['company'];
+			if (!$entity){
+				die("Can't find an entity!!\n");
+			}
+		}
+	}
+	die(print_r($amo->create_task($entity_id, $type, 1, $text, (int) $date, $user_id), TRUE));
 
 }
