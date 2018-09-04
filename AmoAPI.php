@@ -188,9 +188,12 @@ class AmoAPI {
 		return $this->query(self::FIELDS_URL, TRUE, $data); 
 	}
 
-	public function check_field_exists(string $name, int $id = 0, int $entity_type = 0){
+	public function check_field_exists(string $name, int $id = 0, string $entity_type = ''){
 		if ($this->get_custom_fields()){
-			foreach ($this->custom_fields as $field_type){
+			foreach ($this->custom_fields as $type_name => $field_type){
+				if ($entity_type && $type_name != $entity_type){
+					continue;
+				}
 				foreach ($field_type as $field){
 					if ($id && isset($field[$id])){
 						return $field[$id];
@@ -201,6 +204,7 @@ class AmoAPI {
 				}
 			}
 		}
+		return FALSE;
 		
 	}
 
@@ -279,6 +283,19 @@ class AmoAPI {
 			$data['add'][0]['custom_fields'] = $custom_fields;
 		}
 
+		return $this->query(self::CONTACTS_URL, TRUE, $data); 
+	}
+
+	public function update_contact(int $id, array $custom_fields){
+		$data = array(
+			'update' => array(
+				array(
+					'id' => $id,
+					'updated_at' => time(),
+					'custom_fields' => $custom_fields,
+				)
+			)
+		);
 		return $this->query(self::CONTACTS_URL, TRUE, $data); 
 	}
 

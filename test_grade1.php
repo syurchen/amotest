@@ -84,7 +84,7 @@ case 'set_text_field':
 			}
 		}
 	}
-	$field = $amo->check_field_exists(AMO_TEXT_FIELD_NAME);
+	$field = $amo->check_field_exists(AMO_TEXT_FIELD_NAME, 0, array_search($type, AmoEnums::entity_field_types));
 	if (!$field){
 		$field = $amo->create_custom_field(AMO_TEXT_FIELD_NAME, AmoEnums::custom_field_types['TEXT'], 
 			$type, AMO_FIELD_ORIGIN);
@@ -94,9 +94,10 @@ case 'set_text_field':
 	}
 	$custom_fields = array(
 		array( 'id' => $field['id'],
-			'values' => array(
+		'values' => array(
+			array(
 				'value' => $value
-			)
+			))
 		)
 	);
 
